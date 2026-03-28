@@ -11,6 +11,9 @@ MCDC_BRANCH="main"
 # Name for the virtual environment
 VENV_NAME="mcdc"
 
+# Python versions
+PYTHON_VERSION="3.11.5"
+
 # Paths
 WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/tuolumne/$VENV_NAME"
@@ -25,9 +28,8 @@ WITH_GPU="false"
 # Harmonize branch
 HARMONIZE_BRANCH="main"
 
-# ROCm and Python versions
+# ROCm versions
 ROCM_VERSION="6.0.0"
-PYTHON_VERSION="3.11.5"
 
 # Paths
 ROCM_LLVM_PY_DIR="$WORKSPACE/rocm_llvm_py-new"
