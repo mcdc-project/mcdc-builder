@@ -12,6 +12,10 @@ MCDC_BRANCH="main"
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.11.5"
 
+# Select the Cray MPI module and Python bindings.
+MPI_MODULE="cray-mpich/9.0.1"
+MPI4PY_VERSION="4.0.0"
+
 # Locate the source checkout and environment under the workspace.
 WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/tuolumne/$VENV_NAME"
@@ -20,14 +24,16 @@ MCDC_DIR="$WORKSPACE/MCDC"
 # Enable the optional ROCm stack and select its source and runtime versions.
 WITH_GPU="false"
 HARMONIZE_BRANCH="main"
-ROCM_VERSION="6.0.0"
+ROCM_VERSION="7.1.1"
 
-# Select GPU dependency versions and LLVM build parallelism.
-NUMBA_VERSION="0.60.0"
+# Select MC/DC GPU-compatible third-party library versions.
+NUMBA_VERSION="0.61.0"
 CVXPY_VERSION="1.7.0"
 SCIPY_VERSION="1.12"
-HIP_NUMBA_REVISION="8098162162fb0babd77b56583b289d6dd6226151"
-BUILD_JOBS="16"
+NUMPY_VERSION="1.25"
+
+# Leave empty to follow the HIP Numba default branch, or set a commit/tag.
+HIP_NUMBA_REVISION=""
 
 # The LLVM checkout is replaced; the Harmonize checkout must already exist.
 ROCM_LLVM_PY_DIR="$WORKSPACE/rocm_llvm_py-new"
@@ -37,14 +43,16 @@ HARMONIZE_DIR="$WORKSPACE/harmonize"
 # Module environment
 # =============================================================================
 
-# Restore the site defaults and load the Python runtime.
-module restore system
+# Load Python into the current site module environment.
 module load "python/$PYTHON_VERSION"
 
 # Load the GPU runtime only when GPU support is enabled.
 if [ "$WITH_GPU" = "true" ]; then
     module load "rocm/$ROCM_VERSION"
 fi
+
+# Load MPI after Python and the optional GPU runtime.
+module load "$MPI_MODULE"
 
 # =============================================================================
 # Environment creation
@@ -91,12 +99,8 @@ if [ "$WITH_GPU" = "true" ]; then
     cd "$ROCM_LLVM_PY_DIR"
     git checkout "release/rocm-rel-$ROCM_VERSION"
 
-    # Initialize the sources and disable the cpython.string Cython import.
-    ./init.sh
-    sed -i "s/cimport *cpython.string/#cimport cpython.string/g" "$ROCM_LLVM_PY_DIR/rocm-llvm-python/rocm/llvm/_util/types.pyx"
-
-    # Build the wheel and clean intermediate build files.
-    ./build_pkg.sh --post-clean -j "$BUILD_JOBS"
+    # Build the LLVM wheel and clean intermediate build files.
+    ./build.sh --post-clean
 
     # Install the last matching wheel in filename order.
     LATEST=$( ls -1 rocm-llvm-python/dist/rocm_llvm_python-${ROCM_VERSION}*.whl | tail -n 1 )
@@ -115,24 +119,23 @@ if [ "$WITH_GPU" = "true" ]; then
     # HIP Numba support
     # =========================================================================
 
-    # Install the selected numerical-library versions before HIP Numba.
+    # Pin Numba before installing its HIP backend.
     python -m pip install "numba==$NUMBA_VERSION"
-    python -m pip install "cvxpy==$CVXPY_VERSION"
-    python -m pip install "scipy==$SCIPY_VERSION"
 
     # Keep TestPyPI configuration local to this virtual environment.
     python -m pip config --site set global.extra-index-url https://test.pypi.org/simple
 
-    # Install the pinned HIP Numba revision without resolving dependencies.
-    python -m pip install --no-deps "git+https://github.com/ROCm/numba-hip.git@$HIP_NUMBA_REVISION"
+    # Install HIP Numba without resolving dependencies; append a ref if specified.
+    python -m pip install --no-deps "git+https://github.com/ROCm/numba-hip.git${HIP_NUMBA_REVISION:+@$HIP_NUMBA_REVISION}"
 
     # =========================================================================
     # Harmonize
     # =========================================================================
 
-    # Install the selected branch from the existing checkout in editable mode.
+    # Update the selected Harmonize branch and install it in editable mode.
     cd "$HARMONIZE_DIR"
     git switch "$HARMONIZE_BRANCH"
+    git pull --ff-only
     python -m pip install -e .
 fi
 
@@ -140,7 +143,26 @@ fi
 # MC/DC installation
 # =============================================================================
 
-# Select the local branch and install MC/DC with development dependencies.
+# Update the selected MC/DC branch and install its development dependencies.
 cd "$MCDC_DIR"
 git switch "$MCDC_BRANCH"
+git pull --ff-only
 python -m pip install -e ".[dev]"
+
+# =============================================================================
+# MPI bindings
+# =============================================================================
+
+# Compile mpi4py with the loaded Cray MPI compiler wrapper.
+CC=cc MPICC=cc python -m pip install --no-binary=mpi4py "mpi4py==$MPI4PY_VERSION"
+
+# =============================================================================
+# GPU numerical-library versions
+# =============================================================================
+
+# Apply explicit numerical-library pins after installing MC/DC and MPI bindings.
+if [ "$WITH_GPU" = "true" ]; then
+    python -m pip install "cvxpy==$CVXPY_VERSION"
+    python -m pip install "scipy==$SCIPY_VERSION"
+    python -m pip install "numpy==$NUMPY_VERSION"
+fi
