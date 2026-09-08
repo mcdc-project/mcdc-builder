@@ -1,16 +1,13 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # Stop on failed commands or pipelines before continuing setup.
 set -eo pipefail
-
-# Resolve subsequent work from the home directory.
-cd
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
-# Choose the MC/DC branch, environment name, and Python version.
+# Select the source branch and Python environment.
 MCDC_BRANCH="main"
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.11.5"
@@ -25,12 +22,19 @@ WITH_GPU="false"
 HARMONIZE_BRANCH="main"
 ROCM_VERSION="6.0.0"
 
+# Select GPU dependency versions and LLVM build parallelism.
+NUMBA_VERSION="0.60.0"
+CVXPY_VERSION="1.7.0"
+SCIPY_VERSION="1.12"
+HIP_NUMBA_REVISION="8098162162fb0babd77b56583b289d6dd6226151"
+BUILD_JOBS="16"
+
 # The LLVM checkout is replaced; the Harmonize checkout must already exist.
 ROCM_LLVM_PY_DIR="$WORKSPACE/rocm_llvm_py-new"
 HARMONIZE_DIR="$WORKSPACE/harmonize"
 
 # =============================================================================
-# Machine modules
+# Module environment
 # =============================================================================
 
 # Restore the site defaults and load the Python runtime.
@@ -43,7 +47,7 @@ if [ "$WITH_GPU" = "true" ]; then
 fi
 
 # =============================================================================
-# Python environment
+# Environment creation
 # =============================================================================
 
 # Replace the existing environment with a clean one.
@@ -52,19 +56,24 @@ rm -rf "$VENV_PATH"
 
 # Persist ROCm discovery paths for future environment activations.
 if [ "$WITH_GPU" = "true" ]; then
-    PATH_EXPORTS="""
-    export ROCM_PATH="/opt/rocm-$ROCM_VERSION"
-    export ROCM_HOME="/opt/rocm-$ROCM_VERSION"
-    """
-    echo "$PATH_EXPORTS" >> "$VENV_PATH/bin/activate"
+    cat >> "$VENV_PATH/bin/activate" <<EOF
+
+# Locate ROCm for HIP Numba.
+export ROCM_PATH="/opt/rocm-$ROCM_VERSION"
+export ROCM_HOME="/opt/rocm-$ROCM_VERSION"
+EOF
 fi
 
 # Activate the environment before installing packages.
 source "$VENV_PATH/bin/activate"
 
-# Refresh the package installation tools.
-pip install --upgrade pip
-pip install --upgrade setuptools
+# =============================================================================
+# Package installation tools
+# =============================================================================
+
+# Upgrade the installers inside the activated environment.
+python -m pip install --upgrade pip
+python -m pip install --upgrade setuptools
 
 # =============================================================================
 # Optional GPU dependencies
@@ -72,7 +81,6 @@ pip install --upgrade setuptools
 
 # Build and install GPU support before installing MC/DC.
 if [ "$WITH_GPU" = "true" ]; then
-
     # =========================================================================
     # ROCm LLVM bindings
     # =========================================================================
@@ -88,11 +96,11 @@ if [ "$WITH_GPU" = "true" ]; then
     sed -i "s/cimport *cpython.string/#cimport cpython.string/g" "$ROCM_LLVM_PY_DIR/rocm-llvm-python/rocm/llvm/_util/types.pyx"
 
     # Build the wheel and clean intermediate build files.
-    ./build_pkg.sh --post-clean -j 16
+    ./build_pkg.sh --post-clean -j "$BUILD_JOBS"
 
     # Install the last matching wheel in filename order.
     LATEST=$( ls -1 rocm-llvm-python/dist/rocm_llvm_python-${ROCM_VERSION}*.whl | tail -n 1 )
-    pip install --force-reinstall "$LATEST"
+    python -m pip install --force-reinstall "$LATEST"
     unset LATEST
 
     # =========================================================================
@@ -100,23 +108,23 @@ if [ "$WITH_GPU" = "true" ]; then
     # =========================================================================
 
     # Match the HIP bindings and CUDA compatibility layer to the ROCm version.
-    pip install -i https://test.pypi.org/simple "hip-python~=$ROCM_VERSION"
-    pip install -i https://test.pypi.org/simple "hip-python-as-cuda~=$ROCM_VERSION"
+    python -m pip install -i https://test.pypi.org/simple "hip-python~=$ROCM_VERSION"
+    python -m pip install -i https://test.pypi.org/simple "hip-python-as-cuda~=$ROCM_VERSION"
 
     # =========================================================================
     # HIP Numba support
     # =========================================================================
 
     # Install the selected numerical-library versions before HIP Numba.
-    pip install numba==0.60.0
-    pip install cvxpy==1.7.0
-    pip install scipy==1.12
+    python -m pip install "numba==$NUMBA_VERSION"
+    python -m pip install "cvxpy==$CVXPY_VERSION"
+    python -m pip install "scipy==$SCIPY_VERSION"
 
     # Keep TestPyPI configuration local to this virtual environment.
-    pip config --site set global.extra-index-url https://test.pypi.org/simple
+    python -m pip config --site set global.extra-index-url https://test.pypi.org/simple
 
     # Install the pinned HIP Numba revision without resolving dependencies.
-    pip install --no-deps "git+https://github.com/ROCm/numba-hip.git@8098162162fb0babd77b56583b289d6dd6226151"
+    python -m pip install --no-deps "git+https://github.com/ROCm/numba-hip.git@$HIP_NUMBA_REVISION"
 
     # =========================================================================
     # Harmonize
@@ -124,15 +132,15 @@ if [ "$WITH_GPU" = "true" ]; then
 
     # Install the selected branch from the existing checkout in editable mode.
     cd "$HARMONIZE_DIR"
-    git checkout "$HARMONIZE_BRANCH"
-    pip install -e .
+    git switch "$HARMONIZE_BRANCH"
+    python -m pip install -e .
 fi
 
 # =============================================================================
 # MC/DC installation
 # =============================================================================
 
-# Install the selected branch with development dependencies in editable mode.
+# Select the local branch and install MC/DC with development dependencies.
 cd "$MCDC_DIR"
-git checkout "$MCDC_BRANCH"
-pip install -e ".[dev]"
+git switch "$MCDC_BRANCH"
+python -m pip install -e ".[dev]"
