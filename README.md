@@ -22,7 +22,6 @@ requirements in the script, and activate the environment after installation.
 | [OSU COE](https://it.engineering.oregonstate.edu/hpc) | [build-mcdc-osu_coe.sh](build-mcdc-osu_coe.sh) | None configured (CPU only) |
 | [Tuolumne](https://hpc.llnl.gov/hardware/compute-platforms/tuolumne) | [build-mcdc-tuolumne.sh](build-mcdc-tuolumne.sh) | AMD via ROCm/HIP |
 
-For builders with GPU support, set `WITH_GPU="true"` in the configuration.
-
-GPU builds require an existing Harmonize checkout at `HARMONIZE_DIR`. The builder
-switches to `main` by default and pulls updates with `--ff-only` before installation.
+For GPU builds, set `WITH_GPU="true"` and provide an existing Harmonize checkout
+at `HARMONIZE_DIR`. The builder switches to `main` by default and pulls updates
+with `--ff-only` before installation.
