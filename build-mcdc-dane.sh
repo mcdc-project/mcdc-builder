@@ -1,56 +1,55 @@
 #!/bin/bash -x
+
+# Stop on failed commands or pipelines before continuing setup.
+set -eo pipefail
+
+# Resolve subsequent work from the home directory.
 cd
 
 # =============================================================================
-# Setups
+# Configuration
 # =============================================================================
 
-# MC/DC branch
+# Choose the MC/DC branch, environment name, and Python version.
 MCDC_BRANCH="main"
-
-# Name for the virtual environment
 VENV_NAME="mcdc"
-
-# Python versions
 PYTHON_VERSION="3.13.2"
 
-# Paths
+# Locate the source checkout and environment under the workspace.
 WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/dane/$VENV_NAME"
 MCDC_DIR="$WORKSPACE/MCDC"
 
 # =============================================================================
-# Preparation
+# Machine modules
 # =============================================================================
 
-# Set modules
+# Restore the site defaults and load Python and MPI.
 module restore system
 module load "python/$PYTHON_VERSION"
 module load mvapich2/2.3.7
 module load mvapich2-tce/2.3.7
 
 # =============================================================================
-# Create Python environment
+# Python environment
 # =============================================================================
 
-# Remove any pre-existing instance of the environment
+# Replace the existing environment with a clean one.
 rm -rf "$VENV_PATH"
-
-# Create the environment
 "/usr/tce/packages/python/python-$PYTHON_VERSION/bin/virtualenv" "$VENV_PATH"
 
-# Activate the venv
+# Activate the environment before installing packages.
 source "$VENV_PATH/bin/activate"
 
-# Make sure we are working with a recent version of pip and setuptools
+# Refresh the package installation tools.
 pip install --upgrade pip
 pip install --upgrade setuptools
 
 # =============================================================================
-# Install MC/DC
+# MC/DC installation
 # =============================================================================
 
-# MC/DC
+# Install the selected branch with development dependencies in editable mode.
 cd "$MCDC_DIR"
 git checkout "$MCDC_BRANCH"
-pip install -e .[dev]
+pip install -e ".[dev]"
