@@ -1,7 +1,7 @@
 # MC/DC builder
 
 A collection of machine-specific scripts for creating Python environments and
-installing [MC/DC](https://github.com/CEMeNT-PSAAP/MCDC).
+installing [MC/DC](https://github.com/mcdc-project/mcdc).
 
 Edit the chosen script's **Configuration** section to set paths, branches, and
 versions. Provide an existing MC/DC checkout, then run the script on its target

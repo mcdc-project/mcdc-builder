@@ -19,7 +19,7 @@ MPI4PY_VERSION="4.0.0"
 # Locate the source checkout and environment under the workspace.
 WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/tuolumne/$VENV_NAME"
-MCDC_DIR="$WORKSPACE/MCDC"
+MCDC_DIR="$WORKSPACE/mcdc"
 
 # Enable the optional ROCm stack and select its source and runtime versions.
 WITH_GPU="false"

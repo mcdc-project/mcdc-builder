@@ -19,7 +19,7 @@ MPI_MODULE="mpi/latest"
 
 # Locate the existing MC/DC checkout; Conda manages the environment path.
 WORKSPACE="$HOME"
-MCDC_DIR="$WORKSPACE/MCDC"
+MCDC_DIR="$WORKSPACE/mcdc"
 
 # =============================================================================
 # Module environment

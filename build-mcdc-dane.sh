@@ -19,7 +19,7 @@ MPI_COMPILER_MODULE="mvapich2-tce/2.3.7"
 # Locate the source checkout and environment under the workspace.
 WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/dane/$VENV_NAME"
-MCDC_DIR="$WORKSPACE/MCDC"
+MCDC_DIR="$WORKSPACE/mcdc"
 
 # =============================================================================
 # Module environment
