@@ -24,6 +24,9 @@ MCDC_DIR="$WORKSPACE/mcdc"
 WITH_GPU="false"
 ROCM_VERSION="7.1.1"
 
+# Select Numba for the HIP backend.
+NUMBA_VERSION="0.61.0"
+
 # Leave empty to follow the HIP Numba default branch, or set a commit/tag.
 HIP_NUMBA_REVISION=""
 
