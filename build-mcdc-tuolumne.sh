@@ -7,8 +7,7 @@ set -eo pipefail
 # Configuration
 # =============================================================================
 
-# Select the source branch and Python environment.
-MCDC_BRANCH="main"
+# Select the Python environment.
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.11.5"
 
@@ -21,9 +20,8 @@ WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/tuolumne/$VENV_NAME"
 MCDC_DIR="$WORKSPACE/mcdc"
 
-# Enable the optional ROCm stack and select its source and runtime versions.
+# Enable the optional GPU stack and select its ROCm version.
 WITH_GPU="false"
-HARMONIZE_BRANCH="main"
 ROCM_VERSION="7.1.1"
 
 # Select MC/DC GPU-compatible third-party library versions.
@@ -132,10 +130,8 @@ if [ "$WITH_GPU" = "true" ]; then
     # Harmonize
     # =========================================================================
 
-    # Update the selected Harmonize branch and install it in editable mode.
+    # Install the manually prepared Harmonize checkout in editable mode.
     cd "$HARMONIZE_DIR"
-    git switch "$HARMONIZE_BRANCH"
-    git pull --ff-only
     python -m pip install -e .
 fi
 
@@ -143,10 +139,8 @@ fi
 # MC/DC installation
 # =============================================================================
 
-# Update the selected MC/DC branch and install its development dependencies.
+# Install the manually prepared MC/DC checkout with development dependencies.
 cd "$MCDC_DIR"
-git switch "$MCDC_BRANCH"
-git pull --ff-only
 python -m pip install -e ".[dev]"
 
 # =============================================================================

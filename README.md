@@ -3,9 +3,9 @@
 A collection of machine-specific scripts for creating Python environments and
 installing [MC/DC](https://github.com/mcdc-project/mcdc).
 
-Edit the chosen script's **Configuration** section to set paths, branches, and
-versions. Provide an existing MC/DC checkout, then run the script on its target
-machine with the required site modules available:
+Prepare the MC/DC checkout manually, selecting the branch and updates you need.
+Set paths and versions in the script's **Configuration** section, then run it on
+the target machine with the required site modules available:
 
 ```bash
 bash build-mcdc-<machine>.sh
@@ -23,5 +23,5 @@ requirements in the script, and activate the environment after installation.
 | [Tuolumne](https://hpc.llnl.gov/hardware/compute-platforms/tuolumne) | [build-mcdc-tuolumne.sh](build-mcdc-tuolumne.sh) | AMD via ROCm/HIP |
 
 For GPU builds, set `WITH_GPU="true"` and provide an existing Harmonize checkout
-at `HARMONIZE_DIR`. The builder switches to `main` by default and pulls updates
-with `--ff-only` before installation.
+at `HARMONIZE_DIR`, manually updated on `main`. Builders install MC/DC and
+Harmonize as provided; they do not switch branches or pull updates.

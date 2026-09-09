@@ -7,8 +7,7 @@ set -eo pipefail
 # Configuration
 # =============================================================================
 
-# Select the source branch and Python environment.
-MCDC_BRANCH="main"
+# Select the Python environment.
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.13"
 
@@ -70,7 +69,6 @@ python -m pip install --upgrade setuptools
 # MC/DC installation
 # =============================================================================
 
-# Select the local branch and install MC/DC with development dependencies.
+# Install the manually prepared MC/DC checkout with development dependencies.
 cd "$MCDC_DIR"
-git switch "$MCDC_BRANCH"
 python -m pip install -e ".[dev]"
