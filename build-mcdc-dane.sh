@@ -7,6 +7,9 @@ set -eo pipefail
 # Configuration
 # =============================================================================
 
+# Pick optional groups (dev, docs, vvp), or use "." for core dependencies only.
+MCDC_DEPENDENCIES=".[dev,docs,vvp]"
+
 # Select the Python environment.
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.13.2"
@@ -53,6 +56,6 @@ python -m pip install --upgrade setuptools
 # MC/DC installation
 # =============================================================================
 
-# Install the manually prepared MC/DC checkout with development dependencies.
+# Install the manually prepared MC/DC checkout with the selected dependencies.
 cd "$MCDC_DIR"
-python -m pip install -e ".[dev]"
+python -m pip install -e "$MCDC_DEPENDENCIES"

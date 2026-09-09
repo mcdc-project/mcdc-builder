@@ -7,6 +7,9 @@ set -eo pipefail
 # Configuration
 # =============================================================================
 
+# Pick optional groups (dev, docs, vvp), or use "." for core dependencies only.
+MCDC_DEPENDENCIES=".[dev,docs,vvp]"
+
 # Select the Python environment.
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.11.5"
@@ -23,6 +26,7 @@ MCDC_DIR="$WORKSPACE/mcdc"
 # Enable the optional GPU stack and select its ROCm version.
 WITH_GPU="false"
 ROCM_VERSION="7.1.1"
+ROCM_DIR="/opt/rocm-$ROCM_VERSION"
 
 # Select Numba for the HIP backend.
 NUMBA_VERSION="0.61.0"
@@ -57,13 +61,26 @@ module load "$MPI_MODULE"
 rm -rf "$VENV_PATH"
 "/usr/tce/packages/python/python-$PYTHON_VERSION/bin/virtualenv" "$VENV_PATH"
 
-# Persist ROCm discovery paths for future environment activations.
+# Restore the GPU toolchain on activation, including after node login resets.
 if [ "$WITH_GPU" = "true" ]; then
     cat >> "$VENV_PATH/bin/activate" <<EOF
 
-# Locate ROCm for HIP Numba.
-export ROCM_PATH="/opt/rocm-$ROCM_VERSION"
-export ROCM_HOME="/opt/rocm-$ROCM_VERSION"
+# Load the ROCm version used to build this environment.
+if ! module load "rocm/$ROCM_VERSION"; then
+    printf '%s\n' "Failed to load rocm/$ROCM_VERSION for this environment." >&2
+    return 1
+fi
+
+# Require the compiler tools before exposing the ROCm paths.
+if [ ! -x "$ROCM_DIR/bin/hipcc" ] || [ ! -x "$ROCM_DIR/llvm/bin/llvm-as" ]; then
+    printf '%s\n' "Missing hipcc or llvm-as under $ROCM_DIR." >&2
+    return 1
+fi
+
+# HIP Numba uses ROCm variables; Harmonize discovers hipcc through PATH.
+export ROCM_PATH="$ROCM_DIR"
+export ROCM_HOME="$ROCM_DIR"
+export PATH="$ROCM_DIR/bin:$ROCM_DIR/llvm/bin:\$PATH"
 EOF
 fi
 
@@ -136,9 +153,9 @@ fi
 # MC/DC installation
 # =============================================================================
 
-# Install the manually prepared MC/DC checkout with development dependencies.
+# Install the manually prepared MC/DC checkout with the selected dependencies.
 cd "$MCDC_DIR"
-python -m pip install -e ".[dev]"
+python -m pip install -e "$MCDC_DEPENDENCIES"
 
 # =============================================================================
 # MPI bindings
