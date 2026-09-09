@@ -24,11 +24,6 @@ MCDC_DIR="$WORKSPACE/mcdc"
 WITH_GPU="false"
 ROCM_VERSION="7.1.1"
 
-# Select MC/DC GPU-compatible third-party library versions.
-NUMBA_VERSION="0.61.0"
-SCIPY_VERSION="1.12"
-NUMPY_VERSION="2.0.0"
-
 # Leave empty to follow the HIP Numba default branch, or set a commit/tag.
 HIP_NUMBA_REVISION=""
 
@@ -148,13 +143,3 @@ python -m pip install -e ".[dev]"
 
 # Compile mpi4py with the loaded Cray MPI compiler wrapper.
 CC=cc MPICC=cc python -m pip install --no-binary=mpi4py "mpi4py==$MPI4PY_VERSION"
-
-# =============================================================================
-# GPU numerical-library versions
-# =============================================================================
-
-# Apply explicit numerical-library pins after installing MC/DC and MPI bindings.
-if [ "$WITH_GPU" = "true" ]; then
-    python -m pip install "scipy==$SCIPY_VERSION"
-    python -m pip install "numpy==$NUMPY_VERSION"
-fi
