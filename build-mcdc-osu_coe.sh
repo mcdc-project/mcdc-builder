@@ -63,6 +63,19 @@ conda create --name "$VENV_NAME" python="$PYTHON_VERSION" --yes
 # Activate the environment before installing packages.
 conda activate "$VENV_NAME"
 
+# Restore the build modules, except Python, on every Conda activation.
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d"
+cat > "$CONDA_PREFIX/etc/conda/activate.d/mcdc-modules.sh" <<EOF
+# Load the scheduler, Conda, compiler, and MPI modules used by this environment.
+module load slurm || return 1
+module load "$CONDA_MODULE" || return 1
+module load "$COMPILER_MODULE" || return 1
+module load "$MPI_MODULE" || return 1
+EOF
+
+# Apply the new hook to the current activation as well.
+source "$CONDA_PREFIX/etc/conda/activate.d/mcdc-modules.sh"
+
 # =============================================================================
 # Package installation tools
 # =============================================================================

@@ -44,6 +44,14 @@ module load "$MPI_COMPILER_MODULE"
 rm -rf "$VENV_PATH"
 "/usr/tce/packages/python/python-$PYTHON_VERSION/bin/virtualenv" "$VENV_PATH"
 
+# Restore the configured MPI modules whenever the environment is activated.
+cat >> "$VENV_PATH/bin/activate" <<EOF
+
+# Load the MPI runtime and compiler wrappers used by this environment.
+module load "$MPI_MODULE" || return 1
+module load "$MPI_COMPILER_MODULE" || return 1
+EOF
+
 # Activate the environment before installing packages.
 source "$VENV_PATH/bin/activate"
 

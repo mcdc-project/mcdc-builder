@@ -87,6 +87,13 @@ export PATH="$ROCM_DIR/bin:$ROCM_DIR/llvm/bin:\$PATH"
 EOF
 fi
 
+# Restore MPI after the optional GPU toolchain on every activation.
+cat >> "$VENV_PATH/bin/activate" <<EOF
+
+# Load the Cray MPI runtime and compiler wrappers used by this environment.
+module load "$MPI_MODULE" || return 1
+EOF
+
 # Activate the environment before installing packages.
 source "$VENV_PATH/bin/activate"
 
