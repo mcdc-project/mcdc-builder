@@ -10,6 +10,9 @@ set -eo pipefail
 # Pick optional groups (dev, docs, vvp), or use "." for core dependencies only.
 MCDC_DEPENDENCIES=".[dev,docs,vvp]"
 
+# Install MC/DC in editable mode; set false for a regular installation.
+MCDC_EDITABLE="true"
+
 # Select the Python environment.
 VENV_NAME="mcdc"
 PYTHON_VERSION="3.13"
@@ -74,4 +77,8 @@ python -m pip install --upgrade setuptools
 
 # Install the manually prepared MC/DC checkout with the selected dependencies.
 cd "$MCDC_DIR"
-python -m pip install -e "$MCDC_DEPENDENCIES"
+if [ "$MCDC_EDITABLE" = "true" ]; then
+    python -m pip install -e "$MCDC_DEPENDENCIES"
+else
+    python -m pip install "$MCDC_DEPENDENCIES"
+fi

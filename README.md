@@ -5,6 +5,7 @@ A collection of machine-specific scripts for creating Python environments and in
 Prepare and update the MC/DC checkout at `MCDC_DIR`.
 Review the script's requirements and **Configuration** section, then run it on the target machine with the site's module system available.
 Set `MCDC_DEPENDENCIES` to select optional groups (`dev`, `docs`, `vvp`), or use `"."` for core dependencies only.
+Editable installation is enabled by default; set `MCDC_EDITABLE="false"` for a regular installation.
 Replace `MACHINE` below with the name used in the script filename:
 
 ```bash
@@ -25,8 +26,3 @@ After installation, activate the environment in each new shell.
 ## GPU builds
 
 For GPU builds, set `WITH_GPU="true"` and prepare an updated [Harmonize](https://github.com/CEMeNT-PSAAP/harmonize) checkout at `HARMONIZE_DIR`.
-GPU builds also replace the ROCm LLVM source directory at `ROCM_LLVM_PY_DIR`.
-Builders install MC/DC and Harmonize as provided; they do not switch branches or pull updates.
-
-Activating a Tuolumne GPU environment reloads its configured ROCm module and selects the matching compiler tools.
-Activate it after entering a compute node; after changing ROCm versions, run MC/DC once with `--clear-cache`.
