@@ -7,15 +7,15 @@ set -eo pipefail
 # Configuration
 # =============================================================================
 
-# Pick optional groups (dev, docs, vvp), or use "." for core dependencies only.
-MCDC_DEPENDENCIES=".[dev,docs,vvp]"
+# Select the Python environment.
+VENV_NAME="mcdc"
+PYTHON_VERSION="3.13.2"
 
 # Install MC/DC in editable mode; set false for a regular installation.
 MCDC_EDITABLE="true"
 
-# Select the Python environment.
-VENV_NAME="mcdc"
-PYTHON_VERSION="3.13.2"
+# Pick optional groups (dev, docs, vvp), or use "." for core dependencies only.
+MCDC_DEPENDENCIES=".[dev,docs,vvp]"
 
 # Load matching MPI runtime and compiler-wrapper modules.
 MPI_MODULE="mvapich2/2.3.7"
