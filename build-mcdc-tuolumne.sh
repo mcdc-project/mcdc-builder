@@ -6,7 +6,7 @@ cd
 # =============================================================================
 
 # MC/DC branch
-MCDC_BRANCH="main"
+MCDC_BRANCH="bd2568e4ae32392f45bcbcab18aa23a8f7874d30"
 
 # Name for the virtual environment
 VENV_NAME="mcdc"
@@ -23,16 +23,20 @@ MCDC_DIR="$WORKSPACE/MCDC"
 # Setups - GPU mode
 # =================
 
-WITH_GPU="false"
+WITH_GPU="true"
+WITH_MPI="true"
 
 # Harmonize branch
 HARMONIZE_BRANCH="main"
 
 # ROCm versions
-ROCM_VERSION="6.0.0"
+ROCM_VERSION="7.1.1"
+
+# MPI module
+MPI_MODULE="cray-mpich/9.0.1"
 
 # Paths
-ROCM_LLVM_PY_DIR="$WORKSPACE/rocm_llvm_py-new"
+ROCM_LLVM_PY_DIR="$WORKSPACE/rocm_llvm_py"
 HARMONIZE_DIR="$WORKSPACE/harmonize"
 
 # =============================================================================
@@ -42,6 +46,9 @@ HARMONIZE_DIR="$WORKSPACE/harmonize"
 # Set modules
 module restore system
 module load "python/$PYTHON_VERSION"
+if [ "$WITH_MPI" = "true" ]; then
+    module load "$MPI_MODULE"
+fi
 if [ "$WITH_GPU" = "true" ]; then
     # Load necessary modules
     module load "rocm/$ROCM_VERSION"
@@ -62,6 +69,7 @@ if [ "$WITH_GPU" = "true" ]; then
     PATH_EXPORTS="""
     export ROCM_PATH="/opt/rocm-$ROCM_VERSION"
     export ROCM_HOME="/opt/rocm-$ROCM_VERSION"
+    module load rocm/7.1.1
     """
     echo "$PATH_EXPORTS" >> "$VENV_PATH/bin/activate"
 fi
@@ -95,9 +103,7 @@ if [ "$WITH_GPU" = "true" ]; then
     git checkout "release/rocm-rel-$ROCM_VERSION"
 
     # Build the package
-    ./init.sh
-    sed -i "s/cimport *cpython.string/#cimport cpython.string/g" "$ROCM_LLVM_PY_DIR/rocm-llvm-python/rocm/llvm/_util/types.pyx"
-    ./build_pkg.sh --post-clean -j 16
+    ./build.sh --post-clean -j 16
 
     # Select a wheel with the preferred rocm version.
     LATEST=$( ls -1 rocm-llvm-python/dist/rocm_llvm_python-${ROCM_VERSION}*.whl | tail -n 1 )
@@ -116,13 +122,13 @@ if [ "$WITH_GPU" = "true" ]; then
     # =========================================================================
 
     # Install supported library versions
-    pip install numba==0.60.0
+    pip install numba==0.61.0
     pip install cvxpy==1.7.0
     pip install scipy==1.12
 
     # Install HIP-Numba
     pip config set global.extra-index-url https://test.pypi.org/simple
-    pip install --no-deps "git+https://github.com/ROCm/numba-hip.git@8098162162fb0babd77b56583b289d6dd6226151"
+    pip install --no-deps "git+https://github.com/ROCm/numba-hip.git"
 
     # =============================================================================
     #  Install Harmonize
@@ -141,3 +147,7 @@ fi
 cd "$MCDC_DIR"
 git checkout "$MCDC_BRANCH"
 pip install -e .[dev]
+
+if [ "$WITH_MPI" = "true" ]; then
+    CC=cc MPICC=cc pip install --no-binary=mpi4py mpi4py==4.0.0
+fi
