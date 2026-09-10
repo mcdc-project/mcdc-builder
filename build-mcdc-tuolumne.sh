@@ -69,7 +69,7 @@ if [ "$WITH_GPU" = "true" ]; then
     PATH_EXPORTS="""
     export ROCM_PATH="/opt/rocm-$ROCM_VERSION"
     export ROCM_HOME="/opt/rocm-$ROCM_VERSION"
-    module load rocm/7.1.1
+    module load rocm/$ROCM_VERSION
     """
     echo "$PATH_EXPORTS" >> "$VENV_PATH/bin/activate"
 fi
