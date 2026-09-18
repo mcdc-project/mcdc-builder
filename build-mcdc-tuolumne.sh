@@ -26,8 +26,7 @@ WORKSPACE="$HOME"
 VENV_PATH="$WORKSPACE/venv/tuolumne/$VENV_NAME"
 MCDC_DIR="$WORKSPACE/mcdc"
 
-# Enable the optional GPU stack and select its ROCm version.
-WITH_GPU="false"
+# Select the ROCm version.
 ROCM_VERSION="7.1.1"
 ROCM_DIR="/opt/rocm-$ROCM_VERSION"
 
@@ -48,12 +47,10 @@ HARMONIZE_DIR="$WORKSPACE/harmonize"
 # Load Python into the current site module environment.
 module load "python/$PYTHON_VERSION"
 
-# Load the GPU runtime only when GPU support is enabled.
-if [ "$WITH_GPU" = "true" ]; then
-    module load "rocm/$ROCM_VERSION"
-fi
+# Load the GPU runtime.
+module load "rocm/$ROCM_VERSION"
 
-# Load MPI after Python and the optional GPU runtime.
+# Load MPI after Python and the GPU runtime.
 module load "$MPI_MODULE"
 
 # =============================================================================
@@ -65,8 +62,7 @@ rm -rf "$VENV_PATH"
 "/usr/tce/packages/python/python-$PYTHON_VERSION/bin/virtualenv" "$VENV_PATH"
 
 # Restore the GPU toolchain on activation, including after node login resets.
-if [ "$WITH_GPU" = "true" ]; then
-    cat >> "$VENV_PATH/bin/activate" <<EOF
+cat >> "$VENV_PATH/bin/activate" <<EOF
 
 # Load the ROCm version used to build this environment.
 if ! module load "rocm/$ROCM_VERSION"; then
@@ -85,9 +81,8 @@ export ROCM_PATH="$ROCM_DIR"
 export ROCM_HOME="$ROCM_DIR"
 export PATH="$ROCM_DIR/bin:$ROCM_DIR/llvm/bin:\$PATH"
 EOF
-fi
 
-# Restore MPI after the optional GPU toolchain on every activation.
+# Restore MPI after the GPU toolchain on every activation.
 cat >> "$VENV_PATH/bin/activate" <<EOF
 
 # Load the Cray MPI runtime and compiler wrappers used by this environment.
@@ -113,59 +108,52 @@ source "$VENV_PATH/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install --upgrade setuptools
 
-# =============================================================================
-# Optional GPU dependencies
-# =============================================================================
+# =========================================================================
+# ROCm LLVM bindings
+# =========================================================================
 
-# Build and install GPU support before installing MC/DC.
-if [ "$WITH_GPU" = "true" ]; then
-    # =========================================================================
-    # ROCm LLVM bindings
-    # =========================================================================
+# Replace the source checkout and select the requested ROCm release.
+rm -rf "$ROCM_LLVM_PY_DIR"
+git clone https://github.com/ROCm/rocm-llvm-python "$ROCM_LLVM_PY_DIR"
+cd "$ROCM_LLVM_PY_DIR"
+git checkout "release/rocm-rel-$ROCM_VERSION"
 
-    # Replace the source checkout and select the requested ROCm release.
-    rm -rf "$ROCM_LLVM_PY_DIR"
-    git clone https://github.com/ROCm/rocm-llvm-python "$ROCM_LLVM_PY_DIR"
-    cd "$ROCM_LLVM_PY_DIR"
-    git checkout "release/rocm-rel-$ROCM_VERSION"
+# Build the LLVM wheel and clean intermediate build files.
+./build.sh --post-clean
 
-    # Build the LLVM wheel and clean intermediate build files.
-    ./build.sh --post-clean
+# Install the last matching wheel in filename order.
+LATEST=$( ls -1 rocm-llvm-python/dist/rocm_llvm_python-${ROCM_VERSION}*.whl | tail -n 1 )
+python -m pip install --force-reinstall "$LATEST"
+unset LATEST
 
-    # Install the last matching wheel in filename order.
-    LATEST=$( ls -1 rocm-llvm-python/dist/rocm_llvm_python-${ROCM_VERSION}*.whl | tail -n 1 )
-    python -m pip install --force-reinstall "$LATEST"
-    unset LATEST
+# =========================================================================
+# HIP Python bindings
+# =========================================================================
 
-    # =========================================================================
-    # HIP Python bindings
-    # =========================================================================
+# Match the HIP bindings and CUDA compatibility layer to the ROCm version.
+python -m pip install -i https://test.pypi.org/simple "hip-python~=$ROCM_VERSION"
+python -m pip install -i https://test.pypi.org/simple "hip-python-as-cuda~=$ROCM_VERSION"
 
-    # Match the HIP bindings and CUDA compatibility layer to the ROCm version.
-    python -m pip install -i https://test.pypi.org/simple "hip-python~=$ROCM_VERSION"
-    python -m pip install -i https://test.pypi.org/simple "hip-python-as-cuda~=$ROCM_VERSION"
+# =========================================================================
+# HIP Numba support
+# =========================================================================
 
-    # =========================================================================
-    # HIP Numba support
-    # =========================================================================
+# Pin Numba before installing its HIP backend.
+python -m pip install "numba==$NUMBA_VERSION"
 
-    # Pin Numba before installing its HIP backend.
-    python -m pip install "numba==$NUMBA_VERSION"
+# Keep TestPyPI configuration local to this virtual environment.
+python -m pip config --site set global.extra-index-url https://test.pypi.org/simple
 
-    # Keep TestPyPI configuration local to this virtual environment.
-    python -m pip config --site set global.extra-index-url https://test.pypi.org/simple
+# Install HIP Numba without resolving dependencies; append a ref if specified.
+python -m pip install --no-deps "git+https://github.com/ROCm/numba-hip.git${HIP_NUMBA_REVISION:+@$HIP_NUMBA_REVISION}"
 
-    # Install HIP Numba without resolving dependencies; append a ref if specified.
-    python -m pip install --no-deps "git+https://github.com/ROCm/numba-hip.git${HIP_NUMBA_REVISION:+@$HIP_NUMBA_REVISION}"
+# =========================================================================
+# Harmonize
+# =========================================================================
 
-    # =========================================================================
-    # Harmonize
-    # =========================================================================
-
-    # Install the manually prepared Harmonize checkout in editable mode.
-    cd "$HARMONIZE_DIR"
-    python -m pip install -e .
-fi
+# Install the manually prepared Harmonize checkout in editable mode.
+cd "$HARMONIZE_DIR"
+python -m pip install -e .
 
 # =============================================================================
 # MC/DC installation

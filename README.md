@@ -27,4 +27,3 @@ After installation, activate the environment in each new shell.
 ## GPU builds
 
 For GPU builds, prepare an updated [Harmonize](https://github.com/CEMeNT-PSAAP/harmonize) checkout at `HARMONIZE_DIR`.
-For Tuolumne, set `WITH_GPU="true"`; the OSU COE NVIDIA builder always installs GPU support.
