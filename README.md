@@ -21,8 +21,12 @@ After installation, activate the environment in each new shell.
 | --- | --- | --- |
 | [Dane](https://hpc.llnl.gov/hardware/compute-platforms/dane) | [build-mcdc-dane.sh](build-mcdc-dane.sh) | CPU only |
 | [OSU COE](https://it.engineering.oregonstate.edu/hpc) | [build-mcdc-osu_coe.sh](build-mcdc-osu_coe.sh) | CPU only |
+| OSU COE NVIDIA | [build-mcdc-osu_coe_nvidia.sh](build-mcdc-osu_coe_nvidia.sh) | NVIDIA via CUDA |
 | [Tuolumne](https://hpc.llnl.gov/hardware/compute-platforms/tuolumne) | [build-mcdc-tuolumne.sh](build-mcdc-tuolumne.sh) | AMD via ROCm/HIP |
 
 ## GPU builds
 
-For GPU builds, set `WITH_GPU="true"` and prepare an updated [Harmonize](https://github.com/CEMeNT-PSAAP/harmonize) checkout at `HARMONIZE_DIR`.
+For GPU builds, prepare an updated [Harmonize](https://github.com/CEMeNT-PSAAP/harmonize) checkout at `HARMONIZE_DIR`.
+For Tuolumne, set `WITH_GPU="true"`; the OSU COE NVIDIA builder always installs GPU support.
+The NVIDIA builder uses CUDA 11.8, Python 3.11, GCC 10.3, MPICH, and Numba 0.63.1.
+Its default paths are `$HOME/mcdc`, `$HOME/harmonize`, and `$HOME/venv/osu_coe_nvidia/mcdc`; adjust `WORKSPACE` or the individual paths in **Configuration** as needed.
