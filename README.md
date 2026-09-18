@@ -27,6 +27,3 @@ After installation, activate the environment in each new shell.
 ## GPU builds
 
 For GPU builds, prepare an updated [Harmonize](https://github.com/CEMeNT-PSAAP/harmonize) checkout at `HARMONIZE_DIR`.
-For Tuolumne, set `WITH_GPU="true"`; the OSU COE NVIDIA builder always installs GPU support.
-The NVIDIA builder uses CUDA 11.8, Python 3.11, GCC 10.3, MPICH, and Numba 0.63.1.
-Its default paths are `$HOME/mcdc`, `$HOME/harmonize`, and `$HOME/venv/osu_coe_nvidia/mcdc`; adjust `WORKSPACE` or the individual paths in **Configuration** as needed.
