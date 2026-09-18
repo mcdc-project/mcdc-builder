@@ -20,8 +20,8 @@ After installation, activate the environment in each new shell.
 | Machine | Script | Builder GPU support |
 | --- | --- | --- |
 | [Dane](https://hpc.llnl.gov/hardware/compute-platforms/dane) | [build-mcdc-dane.sh](build-mcdc-dane.sh) | CPU only |
-| [OSU COE](https://it.engineering.oregonstate.edu/hpc) | [build-mcdc-osu_coe.sh](build-mcdc-osu_coe.sh) | CPU only |
-| OSU COE NVIDIA | [build-mcdc-osu_coe_nvidia.sh](build-mcdc-osu_coe_nvidia.sh) | NVIDIA via CUDA |
+| [OSU COE](https://it.engineering.oregonstate.edu/hpc/about-cluster) | [build-mcdc-osu_coe.sh](build-mcdc-osu_coe.sh) | CPU only |
+| [OSU COE NVIDIA](https://it.engineering.oregonstate.edu/hpc/about-cluster) | [build-mcdc-osu_coe_nvidia.sh](build-mcdc-osu_coe_nvidia.sh) | NVIDIA via CUDA |
 | [Tuolumne](https://hpc.llnl.gov/hardware/compute-platforms/tuolumne) | [build-mcdc-tuolumne.sh](build-mcdc-tuolumne.sh) | AMD via ROCm/HIP |
 
 ## GPU builds
